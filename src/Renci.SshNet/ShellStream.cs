@@ -7,7 +7,9 @@ using Renci.SshNet.Common;
 using System.Threading;
 using System.Text.RegularExpressions;
 using Renci.SshNet.Abstractions;
-
+#if NETCORE
+using System.Threading.Tasks;
+#endif
 namespace Renci.SshNet
 {
     /// <summary>
@@ -306,6 +308,91 @@ namespace Renci.SshNet
             }
             while (!expectedFound);
         }
+
+#if NETCORE
+
+        /// <summary>
+        /// Expects the specified expression and performs action when one is found.
+        /// </summary>
+        /// <param name="token">Enables cooperative cancellation between thread</param>
+        /// <param name="expectActions">The expected expressions and actions to perform.</param>
+        public async Task ExpectAsync(CancellationToken token, params ExpectAction[] expectActions)
+        {
+            await ExpectAsync(TimeSpan.Zero, token, expectActions);
+        }
+
+        /// <summary>
+        /// Expects the specified expression and performs action when one is found.
+        /// </summary>
+        /// /// <param name="token">Enables cooperative cancellation between thread</param>
+        /// <param name="timeout">Time to wait for input.</param>
+        /// <param name="expectActions">The expected expressions and actions to perform, if the specified time elapsed and expected condition have not met, that method will exit without executing any action.</param>
+        public async Task ExpectAsync(TimeSpan timeout, CancellationToken token, params ExpectAction[] expectActions)
+        {
+            var expectedFound = false;
+            var text = string.Empty;
+            await Task.Run(() =>
+            {
+                using (var tokenRegistration = token.Register(() =>
+                {
+                    _dataReceived.Set();
+                }))
+                {
+                    do
+                    {
+                        lock (_incoming)
+                        {
+                            if (_incoming.Count > 0)
+                            {
+                                text = _encoding.GetString(_incoming.ToArray(), 0, _incoming.Count);
+                            }
+
+                            if (text.Length > 0)
+                            {
+                                foreach (var expectAction in expectActions)
+                                {
+                                    var match = expectAction.Expect.Match(text);
+
+                                    if (match.Success)
+                                    {
+                                        var result = text.Substring(0, match.Index + match.Length);
+
+                                        for (var i = 0; i < match.Index + match.Length && _incoming.Count > 0; i++)
+                                        {
+                                            //  Remove processed items from the queue
+                                            _incoming.Dequeue();
+                                        }
+
+                                        expectAction.Action(result);
+                                        expectedFound = true;
+                                    }
+                                }
+                            }
+                        }
+                        if (!expectedFound)
+                        {
+                            if (token.IsCancellationRequested)
+                            {
+                                token.ThrowIfCancellationRequested();
+                            }
+
+                            if (timeout.Ticks > 0)
+                            {
+                                if (!_dataReceived.WaitOne(timeout))
+                                {
+                                    return;
+                                }
+                            }
+                            else
+                            {
+                                _dataReceived.WaitOne();
+                            }
+                        }
+                    } while (!expectedFound);
+                }
+            }, token);
+        }
+#endif
 
         /// <summary>
         /// Begins the expect.
