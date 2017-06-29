@@ -316,9 +316,9 @@ namespace Renci.SshNet
         /// </summary>
         /// <param name="token">Enables cooperative cancellation between thread</param>
         /// <param name="expectActions">The expected expressions and actions to perform.</param>
-        public async Task ExpectAsync(CancellationToken token, params ExpectAction[] expectActions)
+        public void Expect(CancellationToken token, params ExpectAction[] expectActions)
         {
-            await ExpectAsync(TimeSpan.Zero, token, expectActions);
+            Expect(TimeSpan.Zero, token, expectActions);
         }
 
         /// <summary>
@@ -327,71 +327,71 @@ namespace Renci.SshNet
         /// /// <param name="token">Enables cooperative cancellation between thread</param>
         /// <param name="timeout">Time to wait for input.</param>
         /// <param name="expectActions">The expected expressions and actions to perform, if the specified time elapsed and expected condition have not met, that method will exit without executing any action.</param>
-        public async Task ExpectAsync(TimeSpan timeout, CancellationToken token, params ExpectAction[] expectActions)
+        public void Expect(TimeSpan timeout, CancellationToken token, params ExpectAction[] expectActions)
         {
             var expectedFound = false;
             var text = string.Empty;
-            await Task.Run(() =>
+
+            using (var tokenRegistration = token.Register(() =>
             {
-                using (var tokenRegistration = token.Register(() =>
+                _dataReceived.Set();
+            }))
+            {
+                do
                 {
-                    _dataReceived.Set();
-                }))
-                {
-                    do
+                    lock (_incoming)
                     {
-                        lock (_incoming)
+                        if (_incoming.Count > 0)
                         {
-                            if (_incoming.Count > 0)
-                            {
-                                text = _encoding.GetString(_incoming.ToArray(), 0, _incoming.Count);
-                            }
+                            text = _encoding.GetString(_incoming.ToArray(), 0, _incoming.Count);
+                        }
 
-                            if (text.Length > 0)
+                        if (text.Length > 0)
+                        {
+                            foreach (var expectAction in expectActions)
                             {
-                                foreach (var expectAction in expectActions)
+                                var match = expectAction.Expect.Match(text);
+
+                                if (match.Success)
                                 {
-                                    var match = expectAction.Expect.Match(text);
+                                    var result = text.Substring(0, match.Index + match.Length);
 
-                                    if (match.Success)
+                                    for (var i = 0; i < match.Index + match.Length && _incoming.Count > 0; i++)
                                     {
-                                        var result = text.Substring(0, match.Index + match.Length);
-
-                                        for (var i = 0; i < match.Index + match.Length && _incoming.Count > 0; i++)
-                                        {
-                                            //  Remove processed items from the queue
-                                            _incoming.Dequeue();
-                                        }
-
-                                        expectAction.Action(result);
-                                        expectedFound = true;
+                                        //  Remove processed items from the queue
+                                        _incoming.Dequeue();
                                     }
-                                }
-                            }
-                        }
-                        if (!expectedFound)
-                        {
-                            if (token.IsCancellationRequested)
-                            {
-                                token.ThrowIfCancellationRequested();
-                            }
 
-                            if (timeout.Ticks > 0)
-                            {
-                                if (!_dataReceived.WaitOne(timeout))
-                                {
-                                    return;
+                                    expectAction.Action(result);
+                                    expectedFound = true;
                                 }
                             }
-                            else
+                        }
+                    }
+                    if (!expectedFound)
+                    {
+                        if (token.IsCancellationRequested)
+                        {
+                            token.ThrowIfCancellationRequested();
+                        }
+
+                        if (timeout.Ticks > 0)
+                        {
+                            if (!_dataReceived.WaitOne(timeout))
                             {
-                                _dataReceived.WaitOne();
+                                return;
                             }
                         }
-                    } while (!expectedFound);
-                }
-            }, token);
+                        else
+                        {
+                            _dataReceived.WaitOne();
+                        }
+                    }
+                } while (!expectedFound);
+            }
+
         }
+
 #endif
 
         /// <summary>
