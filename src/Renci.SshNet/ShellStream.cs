@@ -334,7 +334,7 @@ namespace Renci.SshNet
 
             using (var tokenRegistration = token.Register(() =>
             {
-                _dataReceived.Set();
+                _dataReceived?.Set();
             }))
             {
                 do
