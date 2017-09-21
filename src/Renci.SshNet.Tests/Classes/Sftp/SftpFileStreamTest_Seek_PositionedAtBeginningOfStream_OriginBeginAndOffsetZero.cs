@@ -65,5 +65,21 @@ namespace Renci.SshNet.Tests.Classes.Sftp
         {
             Assert.AreEqual(0L, _actual);
         }
+
+        [TestMethod]
+        public void IsOpenOnSftpSessionShouldHaveBeenInvokedOnce()
+        {
+            SftpSessionMock.Verify(p => p.IsOpen, Times.Once);
+        }
+
+        [TestMethod]
+        public void PositionShouldReturnZero()
+        {
+            SftpSessionMock.InSequence(MockSequence).Setup(p => p.IsOpen).Returns(true);
+
+            Assert.AreEqual(0L, _target.Position);
+
+            SftpSessionMock.Verify(p => p.IsOpen, Times.Exactly(2));
+        }
     }
 }

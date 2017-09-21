@@ -28,7 +28,7 @@ namespace Renci.SshNet
     {
         private const byte Null = 0x00;
         private const byte CarriageReturn = 0x0d;
-        private const byte LineFeed = 0x0a;
+        internal const byte LineFeed = 0x0a;
 
         /// <summary>
         /// Specifies an infinite waiting period.
@@ -49,15 +49,21 @@ namespace Renci.SshNet
         /// <summary>
         /// Specifies maximum packet size defined by the protocol.
         /// </summary>
+        /// <value>
+        /// 68536 (64 KB + 3000 bytes).
+        /// </value>
         private const int MaximumSshPacketSize = LocalChannelDataPacketSize + 3000;
 
         /// <summary>
         /// Holds the initial local window size for the channels.
         /// </summary>
         /// <value>
-        /// 2 MB.
+        /// 2147483647 (2^31 - 1) bytes.
         /// </value>
-        private const int InitialLocalWindowSize = LocalChannelDataPacketSize * 32;
+        /// <remarks>
+        /// We currently do not define a maximum (remote) window size.
+        /// </remarks>
+        private const int InitialLocalWindowSize = 0x7FFFFFFF;
 
         /// <summary>
         /// Holds the maximum size of channel data packets that we receive.
@@ -65,7 +71,16 @@ namespace Renci.SshNet
         /// <value>
         /// 64 KB.
         /// </value>
-        private const int LocalChannelDataPacketSize = 1024 * 64;
+        /// <remarks>
+        /// <para>
+        /// This is the maximum size (in bytes) we support for the data (payload) of a
+        /// <c>SSH_MSG_CHANNEL_DATA</c> message we receive.
+        /// </para>
+        /// <para>
+        /// We currently do not enforce this limit.
+        /// </para>
+        /// </remarks>
+        private const int LocalChannelDataPacketSize = 1024*64;
 
 #if FEATURE_REGEX_COMPILE
         private static readonly Regex ServerVersionRe = new Regex("^SSH-(?<protoversion>[^-]+)-(?<softwareversion>.+)( SP.+)?$", RegexOptions.Compiled);
