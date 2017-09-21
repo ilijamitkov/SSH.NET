@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 #if FEATURE_REFLECTION_TYPEINFO
 using System.Reflection;
-#else
-using System.Linq;
 #endif // FEATURE_REFLECTION_TYPEINFO
 
 namespace Renci.SshNet.Abstractions
@@ -14,10 +13,9 @@ namespace Renci.SshNet.Abstractions
             where T : Attribute
         {
 #if FEATURE_REFLECTION_TYPEINFO
-            while (true)
-            {
-                type = type.GetTypeInfo();
-            }
+
+            var attributes = type.GetTypeInfo().GetCustomAttributes(typeof(T), inherit);
+            return attributes.Cast<T>();
 #else
             var attributes = type.GetCustomAttributes(typeof(T), inherit);
             return attributes.Cast<T>();
