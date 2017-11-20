@@ -400,14 +400,9 @@ namespace Renci.SshNet.Channels
         {
             _closeMessageReceived = true;
 
-            // raise event signaling that the server has closed its end of the channel
-            var closed = Closed;
-            if (closed != null)
-            {
-                closed(this, new ChannelEventArgs(LocalChannelNumber));
-            }
-
-            // signal that SSH_MSG_CHANNEL_CLOSE message was received from server
+            // Signal that SSH_MSG_CHANNEL_CLOSE message was received from server.
+            // We need to signal this before invoking Close() as it may very well
+            // be blocked waiting for this signal.
             var channelClosedWaitHandle = _channelClosedWaitHandle;
             if (channelClosedWaitHandle != null)
                 channelClosedWaitHandle.Set();
@@ -551,8 +546,9 @@ namespace Renci.SshNet.Channels
                     {
                         _closeMessageSent = true;
 
-                        // wait for channel to be closed if we actually sent a close message (either to initiate closing
-                        // the channel, or as response to a SSH_MSG_CHANNEL_CLOSE message sent by the server
+                        // only wait for the channel to be closed by the server if we didn't send a
+                        // SSH_MSG_CHANNEL_CLOSE as response to a SSH_MSG_CHANNEL_CLOSE sent by the
+                        // server
                         try
                         {
                             WaitOnHandle(_channelClosedWaitHandle);
@@ -564,7 +560,22 @@ namespace Renci.SshNet.Channels
                     }
                 }
 
-                IsOpen = false;
+                if (IsOpen)
+                {
+                    // mark sure the channel is marked closed before we raise the Closed event
+                    // this also ensures don't raise the Closed event more than once
+                    IsOpen = false;
+
+                    if (_closeMessageReceived)
+                    {
+                        // raise event signaling that both ends of the channel have been closed
+                        var closed = Closed;
+                        if (closed != null)
+                        {
+                            closed(this, new ChannelEventArgs(LocalChannelNumber));
+                        }
+                    }
+                }
             }
         }
 

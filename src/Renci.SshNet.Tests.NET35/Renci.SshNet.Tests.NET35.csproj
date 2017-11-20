@@ -78,8 +78,23 @@
     <Compile Include="..\..\test\Renci.SshNet.Shared.Tests\ForwardedPortStatusTest_Stopping.cs">
       <Link>Classes\ForwardedPortStatusTest_Stopping.cs</Link>
     </Compile>
+    <Compile Include="..\Renci.SshNet.Tests\Classes\BaseClientTest_Connected_KeepAliveInterval_NegativeOne.cs">
+      <Link>Classes\BaseClientTest_Connected_KeepAliveInterval_NegativeOne.cs</Link>
+    </Compile>
+    <Compile Include="..\Renci.SshNet.Tests\Classes\BaseClientTest_Connected_KeepAliveInterval_NotNegativeOne.cs">
+      <Link>Classes\BaseClientTest_Connected_KeepAliveInterval_NotNegativeOne.cs</Link>
+    </Compile>
     <Compile Include="..\Renci.SshNet.Tests\Classes\BaseClientTest_Connected_KeepAlivesNotSentConcurrently.cs">
       <Link>Classes\BaseClientTest_Connected_KeepAlivesNotSentConcurrently.cs</Link>
+    </Compile>
+    <Compile Include="..\Renci.SshNet.Tests\Classes\BaseClientTest_Connect_OnConnectedThrowsException.cs">
+      <Link>Classes\BaseClientTest_Connect_OnConnectedThrowsException.cs</Link>
+    </Compile>
+    <Compile Include="..\Renci.SshNet.Tests\Classes\BaseClientTest_Disconnected_KeepAliveInterval_NotNegativeOne.cs">
+      <Link>Classes\BaseClientTest_Disconnected_KeepAliveInterval_NotNegativeOne.cs</Link>
+    </Compile>
+    <Compile Include="..\Renci.SshNet.Tests\Classes\BaseClientTest_NotConnected_KeepAliveInterval_NotNegativeOne.cs">
+      <Link>Classes\BaseClientTest_NotConnected_KeepAliveInterval_NotNegativeOne.cs</Link>
     </Compile>
     <Compile Include="..\Renci.SshNet.Tests\Classes\Channels\ChannelDirectTcpipTest.cs">
       <Link>Classes\Channels\ChannelDirectTcpipTest.cs</Link>
@@ -213,8 +228,14 @@
     <Compile Include="..\Renci.SshNet.Tests\Classes\CipherInfoTest.cs">
       <Link>Classes\CipherInfoTest.cs</Link>
     </Compile>
+    <Compile Include="..\Renci.SshNet.Tests\Classes\ClientAuthenticationTest.cs">
+      <Link>Classes\ClientAuthenticationTest.cs</Link>
+    </Compile>
     <Compile Include="..\Renci.SshNet.Tests\Classes\ClientAuthenticationTestBase.cs">
       <Link>Classes\ClientAuthenticationTestBase.cs</Link>
+    </Compile>
+    <Compile Include="..\Renci.SshNet.Tests\Classes\ClientAuthenticationTest_Failure_MultiList_AllAllowedAuthenticationsHaveReachedPartialSuccessLimit.cs">
+      <Link>Classes\ClientAuthenticationTest_Failure_MultiList_AllAllowedAuthenticationsHaveReachedPartialSuccessLimit.cs</Link>
     </Compile>
     <Compile Include="..\Renci.SshNet.Tests\Classes\ClientAuthenticationTest_Failure_SingleList_AuthenticationMethodFailed.cs">
       <Link>Classes\ClientAuthenticationTest_Failure_SingleList_AuthenticationMethodFailed.cs</Link>
@@ -225,6 +246,21 @@
     <Compile Include="..\Renci.SshNet.Tests\Classes\ClientAuthenticationTest_Success_MultiList_DifferentAllowedAuthenticationsAfterPartialSuccess.cs">
       <Link>Classes\ClientAuthenticationTest_Success_MultiList_DifferentAllowedAuthenticationsAfterPartialSuccess.cs</Link>
     </Compile>
+    <Compile Include="..\Renci.SshNet.Tests\Classes\ClientAuthenticationTest_Success_MultiList_PartialSuccessLimitReachedFollowedByFailureInAlternateBranch.cs">
+      <Link>Classes\ClientAuthenticationTest_Success_MultiList_PartialSuccessLimitReachedFollowedByFailureInAlternateBranch.cs</Link>
+    </Compile>
+    <Compile Include="..\Renci.SshNet.Tests\Classes\ClientAuthenticationTest_Success_MultiList_PartialSuccessLimitReachedFollowedByFailureInAlternateBranch2.cs">
+      <Link>Classes\ClientAuthenticationTest_Success_MultiList_PartialSuccessLimitReachedFollowedByFailureInAlternateBranch2.cs</Link>
+    </Compile>
+    <Compile Include="..\Renci.SshNet.Tests\Classes\ClientAuthenticationTest_Success_MultiList_PartialSuccessLimitReachedFollowedByFailureInSameBranch.cs">
+      <Link>Classes\ClientAuthenticationTest_Success_MultiList_PartialSuccessLimitReachedFollowedByFailureInSameBranch.cs</Link>
+    </Compile>
+    <Compile Include="..\Renci.SshNet.Tests\Classes\ClientAuthenticationTest_Success_MultiList_PartialSuccessLimitReachedFollowedBySuccessInAlternateBranch.cs">
+      <Link>Classes\ClientAuthenticationTest_Success_MultiList_PartialSuccessLimitReachedFollowedBySuccessInAlternateBranch.cs</Link>
+    </Compile>
+    <Compile Include="..\Renci.SshNet.Tests\Classes\ClientAuthenticationTest_Success_MultiList_PartialSuccessLimitReachedFollowedBySuccessInSameBranch.cs">
+      <Link>Classes\ClientAuthenticationTest_Success_MultiList_PartialSuccessLimitReachedFollowedBySuccessInSameBranch.cs</Link>
+    </Compile>
     <Compile Include="..\Renci.SshNet.Tests\Classes\ClientAuthenticationTest_Success_MultiList_SameAllowedAuthenticationsAfterPartialSuccess.cs">
       <Link>Classes\ClientAuthenticationTest_Success_MultiList_SameAllowedAuthenticationsAfterPartialSuccess.cs</Link>
     </Compile>
@@ -233,6 +269,9 @@
     </Compile>
     <Compile Include="..\Renci.SshNet.Tests\Classes\ClientAuthenticationTest_Success_SingleList_SameAllowedAuthenticationAfterPartialSuccess.cs">
       <Link>Classes\ClientAuthenticationTest_Success_SingleList_SameAllowedAuthenticationAfterPartialSuccess.cs</Link>
+    </Compile>
+    <Compile Include="..\Renci.SshNet.Tests\Classes\ClientAuthenticationTest_Success_SingleList_SameAllowedAuthenticationAfterPartialSuccess_PartialSuccessLimitReached.cs">
+      <Link>Classes\ClientAuthenticationTest_Success_SingleList_SameAllowedAuthenticationAfterPartialSuccess_PartialSuccessLimitReached.cs</Link>
     </Compile>
     <Compile Include="..\Renci.SshNet.Tests\Classes\CommandAsyncResultTest.cs">
       <Link>Classes\CommandAsyncResultTest.cs</Link>
@@ -1511,6 +1550,9 @@
     </Compile>
     <Compile Include="..\Renci.SshNet.Tests\Classes\SubsystemSession_Connect_NeverConnected.cs">
       <Link>Classes\SubsystemSession_Connect_NeverConnected.cs</Link>
+    </Compile>
+    <Compile Include="..\Renci.SshNet.Tests\Classes\SubsystemSession_Connect_SendSubsystemRequestFails.cs">
+      <Link>Classes\SubsystemSession_Connect_SendSubsystemRequestFails.cs</Link>
     </Compile>
     <Compile Include="..\Renci.SshNet.Tests\Classes\SubsystemSession_Disconnect_Connected.cs">
       <Link>Classes\SubsystemSession_Disconnect_Connected.cs</Link>

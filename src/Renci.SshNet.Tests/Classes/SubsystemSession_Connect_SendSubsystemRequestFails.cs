@@ -9,7 +9,7 @@ using Renci.SshNet.Common;
 namespace Renci.SshNet.Tests.Classes
 {
     [TestClass]
-    public class SubsystemSession_Connect_Connected
+    public class SubsystemSession_Connect_SendSubsystemRequestFails
     {
         private Mock<ISession> _sessionMock;
         private Mock<IChannelSession> _channelMock;
@@ -18,7 +18,7 @@ namespace Renci.SshNet.Tests.Classes
         private int _operationTimeout;
         private IList<EventArgs> _disconnectedRegister;
         private IList<ExceptionEventArgs> _errorOccurredRegister;
-        private InvalidOperationException _actualException;
+        private SshException _actualException;
         private MockSequence _sequence;
 
         [TestInitialize]
@@ -42,15 +42,14 @@ namespace Renci.SshNet.Tests.Classes
             _sequence = new MockSequence();
             _sessionMock.InSequence(_sequence).Setup(p => p.CreateChannelSession()).Returns(_channelMock.Object);
             _channelMock.InSequence(_sequence).Setup(p => p.Open());
-            _channelMock.InSequence(_sequence).Setup(p => p.SendSubsystemRequest(_subsystemName)).Returns(true);
-            _channelMock.InSequence(_sequence).Setup(p => p.IsOpen).Returns(true);
+            _channelMock.InSequence(_sequence).Setup(p => p.SendSubsystemRequest(_subsystemName)).Returns(false);
+            _channelMock.InSequence(_sequence).Setup(p => p.Dispose());
 
             _subsystemSession = new SubsystemSessionStub(_sessionMock.Object,
                                                          _subsystemName,
                                                          _operationTimeout);
             _subsystemSession.Disconnected += (sender, args) => _disconnectedRegister.Add(args);
             _subsystemSession.ErrorOccurred += (sender, args) => _errorOccurredRegister.Add(args);
-            _subsystemSession.Connect();
         }
 
         protected void Act()
@@ -60,19 +59,24 @@ namespace Renci.SshNet.Tests.Classes
                 _subsystemSession.Connect();
                 Assert.Fail();
             }
-            catch (InvalidOperationException ex)
+            catch (SshException ex)
             {
                 _actualException = ex;
             }
-
         }
 
         [TestMethod]
-        public void ConnectShouldHaveThrownInvalidOperationException()
+        public void ConnectShouldHaveThrownSshException()
         {
             Assert.IsNotNull(_actualException);
             Assert.IsNull(_actualException.InnerException);
-            Assert.AreEqual("The session is already connected.", _actualException.Message);
+            Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, "Subsystem '{0}' could not be executed.", _subsystemName), _actualException.Message);
+        }
+
+        [TestMethod]
+        public void ChannelShouldBeNull()
+        {
+            Assert.IsNull(_subsystemSession.Channel);
         }
 
         [TestMethod]
@@ -88,29 +92,31 @@ namespace Renci.SshNet.Tests.Classes
         }
 
         [TestMethod]
-        public void IsOpenShouldReturnTrueWhenChannelIsOpen()
+        public void IsOpenShouldReturnFalse()
         {
-            _channelMock.InSequence(_sequence).Setup(p => p.IsOpen).Returns(true);
-
-            Assert.IsTrue(_subsystemSession.IsOpen);
-
-            _channelMock.Verify(p => p.IsOpen, Times.Exactly(2));
-        }
-
-        [TestMethod]
-        public void IsOpenShouldReturnFalseWhenChannelIsNotOpen()
-        {
-            _channelMock.InSequence(_sequence).Setup(p => p.IsOpen).Returns(false);
-
             Assert.IsFalse(_subsystemSession.IsOpen);
-
-            _channelMock.Verify(p => p.IsOpen, Times.Exactly(2));
         }
 
         [TestMethod]
-        public void DisposeOnChannelShouldNeverBeInvoked()
+        public void DisposeOnChannelShouldBeInvokedOnce()
         {
-            _channelMock.Verify(p => p.Dispose(), Times.Never);
+            _channelMock.Verify(p => p.Dispose(), Times.Once);
+        }
+
+        [TestMethod]
+        public void ErrorOccuredOnSessionShouldNoLongerBeSignaledViaErrorOccurredOnSubsystemSession()
+        {
+            _sessionMock.Raise(p => p.ErrorOccured += null, new ExceptionEventArgs(new Exception()));
+
+            Assert.AreEqual(0, _errorOccurredRegister.Count);
+        }
+
+        [TestMethod]
+        public void DisconnectedOnSessionShouldNoLongerBeSignaledViaDisconnectedOnSubsystemSession()
+        {
+            _sessionMock.Raise(p => p.Disconnected += null, new EventArgs());
+
+            Assert.AreEqual(0, _disconnectedRegister.Count);
         }
     }
 }
